@@ -1,3 +1,22 @@
+const createElements = (arr) => {
+  const htmlElements = arr.map((el) => `<span class="btn">${el}</span>`);
+  if (htmlElements.length != 0) {
+    return htmlElements.join(" ");
+  } else {
+    return `<span class="text-red-400">No synonyms available.</span>`;
+  }
+};
+
+const manageSpinner = (status) => {
+  if (status == true) {
+    document.getElementById("spinner").classList.remove("hidden");
+    document.getElementById("word-container").classList.add("hidden");
+  } else {
+    document.getElementById("word-container").classList.remove("hidden");
+    document.getElementById("spinner").classList.add("hidden");
+  }
+};
+
 const loadLesson = () => {
   fetch("https://openapi.programming-hero.com/api/levels/all")
     //promise of a response.
@@ -13,6 +32,8 @@ const removeActive = () => {
 };
 
 const loadLevelWord = (id) => {
+  manageSpinner(true);
+
   const url = `https://openapi.programming-hero.com/api/level/${id}`;
 
   fetch(url)
@@ -26,6 +47,17 @@ const loadLevelWord = (id) => {
     });
 };
 
+// {
+//     "word": "Abundant",
+//     "meaning": null,
+//     "pronunciation": "অবানডান্ট",
+//     "level": 3,
+//     "sentence": "Water is abundant in rainy seasons.",
+//     "points": 3,
+//     "synonyms": [],
+//     "id": 1
+// }
+
 const loadWordDetail = async (id) => {
   const url = `https://openapi.programming-hero.com/api/word/${id}`;
   const res = await fetch(url);
@@ -36,11 +68,32 @@ const loadWordDetail = async (id) => {
 const displayWordDetails = (word) => {
   console.log(word);
   const detailBox = document.getElementById("details-container");
-  // detailBox.innerHTML = `
-  
+  detailBox.innerHTML = `
+            <div class="">
+            <h2 class="text-2xl font-bold">${word.word} (<i class="fa-solid fa-microphone-lines"></i>:${word.pronunciation})</h2>
+          </div>
 
+          <div class="">
+            <h2 class="font-bold">
+              Meaning
+            </h2>
+            <p>${word.meaning}</p>
+          </div>
 
-  // `
+          <div class="">
+            <h2 class="font-bold">
+              Example
+            </h2>
+            <p>${word.sentence}</p>
+          </div>
+
+          <div class="">
+            <h2 class="font-bold">Synonyms</h2>
+
+               <div class="">${createElements(word.synonyms)}</div>
+
+          </div>
+  `;
   document.getElementById("word_modal").showModal();
 };
 
@@ -58,6 +111,7 @@ const displayLevelWord = (words) => {
       </div>
 
     `;
+    manageSpinner(false);
     return;
   }
 
@@ -92,6 +146,7 @@ const displayLevelWord = (words) => {
     `;
     wordContainer.append(card);
   });
+  manageSpinner(false);
 };
 
 const displayLesson = (lessons) => {
@@ -119,3 +174,24 @@ const displayLesson = (lessons) => {
 };
 
 loadLesson();
+
+document.getElementById("btn-search").addEventListener("click", () => {
+  removeActive();
+
+  const input = document.getElementById("input-search");
+  const searchValue = input.value.trim().toLowerCase();
+  console.log(searchValue);
+
+  fetch("https://openapi.programming-hero.com/api/words/all")
+    .then((res) => res.json())
+    .then((data) => {
+      const allWords = data.data;
+      console.log(allWords);
+
+      const filterWords = allWords.filter((word) =>
+        word.word.toLowerCase().includes(searchValue),
+      );
+      // console.log(filterWords);
+      displayLevelWord(filterWords);
+    });
+});

@@ -10,3 +10,7 @@
   background-color: #422ad5;
   color: #fff;
 }
+
+#word-container > * > * {
+  height: 100%;
+}
